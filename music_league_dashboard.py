@@ -46,10 +46,10 @@ top_artists = submissions["Primary Artist"].value_counts().reset_index()
 top_artists.columns = ["Artist", "Submission Count"]
 
 # Most submitted songs with tooltips for artist(s)
-top_songs = submissions.groupby("Title").agg({
-    "Title": "count",
-    "Primary Artist": lambda x: ", ".join(sorted(set(x)))
-}).reset_index()
+top_songs = submissions.groupby("Title").agg(
+    Submission_Count=('Title', 'count'),
+    Artists=('Primary Artist', lambda x: ", ".join(sorted(set(x))))
+).reset_index()
 top_songs.columns = ["Song", "Submission Count", "Artists"]
 
 # Player leaderboard
