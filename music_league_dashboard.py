@@ -45,9 +45,12 @@ submissions["Primary Artist"] = submissions["Artist(s)"].apply(lambda x: str(x).
 top_artists = submissions["Primary Artist"].value_counts().reset_index()
 top_artists.columns = ["Artist", "Submission Count"]
 
-# Most submitted songs
-top_songs = submissions["Title"].value_counts().reset_index()
-top_songs.columns = ["Song", "Submission Count"]
+# Most submitted songs with tooltips for artist(s)
+top_songs = submissions.groupby("Title").agg({
+    "Title": "count",
+    "Primary Artist": lambda x: ", ".join(sorted(set(x)))
+}).reset_index()
+top_songs.columns = ["Song", "Submission Count", "Artists"]
 
 # Player leaderboard
 votes_with_submitter = votes.merge(submissions[["Spotify URI", "Submitter ID"]], on="Spotify URI")
@@ -68,7 +71,7 @@ fig2 = px.bar(top_artists.head(10), x="Submission Count", y="Artist", orientatio
 st.plotly_chart(fig2)
 
 st.header("🎶 Most Submitted Songs")
-fig3 = px.bar(top_songs.head(10), x="Submission Count", y="Song", orientation="h")
+fig3 = px.bar(top_songs.head(10), x="Submission Count", y="Song", orientation="h", hover_data=["Artists"])
 st.plotly_chart(fig3)
 
 # 🎯 Snub Analysis Section
@@ -102,10 +105,6 @@ st.dataframe(
     ranked_snubbers[["Rank", "Username", "Zero Vote Songs", "Total Submissions", "Snub Rate (%)"]],
     use_container_width=True
 )
-
-# Cont
-
-
 
 # --- Wide Table for Interactive Filtering ---
 # Get round names
