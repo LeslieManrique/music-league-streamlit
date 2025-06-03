@@ -41,16 +41,15 @@ competitors = pd.read_csv("competitors.csv")
 # Use only the first artist (ignores features, splits on commas)
 submissions["Primary Artist"] = submissions["Artist(s)"].apply(lambda x: str(x).split(",")[0].strip())
 
-# Most submitted primary artists
+# Most submitted primary artists (with more than 1 submission)
 top_artists = submissions["Primary Artist"].value_counts().reset_index()
 top_artists.columns = ["Artist", "Submission Count"]
+top_artists = top_artists[top_artists["Submission Count"] > 1]
 
-# Most submitted songs with tooltips for artist(s)
-top_songs = submissions.groupby("Title").agg(
-    Submission_Count=('Title', 'count'),
-    Artists=('Primary Artist', lambda x: ", ".join(sorted(set(x))))
-).reset_index()
-top_songs.columns = ["Song", "Submission Count", "Artists"]
+# Most submitted songs with unique (Title + Primary Artist) combination (more than once)
+top_songs = submissions.groupby(["Title", "Primary Artist"]).size().reset_index(name="Submission Count")
+top_songs = top_songs[top_songs["Submission Count"] > 1]
+top_songs = top_songs.sort_values(by="Submission Count", ascending=False)
 
 # Player leaderboard
 votes_with_submitter = votes.merge(submissions[["Spotify URI", "Submitter ID"]], on="Spotify URI")
@@ -62,7 +61,7 @@ player_leaderboard = player_leaderboard.sort_values(by="Total Points", ascending
 # --- Streamlit Layout ---
 st.title("🎵 Music League Dashboard")
 
-st.header("🏆 Player Leaderboard")
+st.header("🏆 Unofficial Player Leaderboard")
 fig1 = px.bar(player_leaderboard.head(10), x="Total Points", y="Username", orientation="h")
 st.plotly_chart(fig1)
 
@@ -71,8 +70,10 @@ fig2 = px.bar(top_artists.head(10), x="Submission Count", y="Artist", orientatio
 st.plotly_chart(fig2)
 
 st.header("🎶 Most Submitted Songs")
-fig3 = px.bar(top_songs.head(10), x="Submission Count", y="Song", orientation="h", hover_data=["Artists"])
+fig3 = px.bar(top_songs.head(10), x="Submission Count", y="Title", orientation="h",
+              hover_data={"Primary Artist": True, "Title": False})
 st.plotly_chart(fig3)
+
 
 # 🎯 Snub Analysis Section
 st.header("🥲 Most Snubbed Players (0-Vote Submissions)")
