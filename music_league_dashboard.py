@@ -205,8 +205,8 @@ player_subs = profile_subs[profile_subs["Username"] == selected_player]
 # Summary stats
 total = player_subs["Total Points"].sum()
 avg = player_subs["Total Points"].mean()
-best = player_subs.sort_values("Total Points", ascending=False).head(1)
-worst = player_subs.sort_values("Total Points").head(1)
+best = player_subs.sort_values("Total Points", ascending=False).head(5)
+worst = player_subs.sort_values("Total Points").head(5)
 
 st.subheader(f"📊 Summary for {selected_player}")
 st.write(f"**Total Points:** {total}")
