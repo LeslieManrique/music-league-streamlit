@@ -146,10 +146,6 @@ if selected_round != "All":
 
 st.dataframe(filtered_table, use_container_width=True)
 
-st.markdown("---")
-st.markdown("Made with 💜 by Leslie & ChatGPT")
-
-
 st.header("🗳️ Who Voted For Me")
 
 # Join votes → get submitter + voter names
