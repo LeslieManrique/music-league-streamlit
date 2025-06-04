@@ -37,6 +37,9 @@ submissions = pd.read_csv("submissions.csv")
 rounds = pd.read_csv("rounds.csv")
 competitors = pd.read_csv("competitors.csv")
 
+# --- Streamlit Layout ---
+st.title("🎵 Music League Dashboard")
+
 # --- Votes Per User Per Round (based on points their songs received) ---
 st.header("📊 Votes Per User Per Round")
 if "Start Time" in rounds.columns:
@@ -89,8 +92,6 @@ round_counts = rounds_participated.groupby("Username").size().reset_index(name="
 player_leaderboard = player_leaderboard.merge(round_counts, on="Username", how="left").fillna(0)
 player_leaderboard["Rounds Participated"] = player_leaderboard["Rounds Participated"].astype(int)
 
-# --- Streamlit Layout ---
-st.title("🎵 Music League Dashboard")
 
 st.header("🏆 Player Leaderboard")
 fig1 = px.bar(player_leaderboard.head(10), x="Total Points", y="Username", orientation="h",
