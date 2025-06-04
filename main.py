@@ -4,7 +4,6 @@ import streamlit as st
 st.markdown("""
     <div style="background-color:#9e01c4;padding:1rem 1.5rem;margin-bottom:1.5rem;border-radius:8px">
         <h1 style="color:white;text-align:center;font-size:3rem;">🎧Music League Dashboard🎧</h1>
-        <p style="color:white;text-align:center;font-size:1rem;margin-top:0.5rem;">Choose a season below</p>
     </div>
 """, unsafe_allow_html=True)
 # Add centered season buttons
