@@ -37,33 +37,66 @@ submissions = pd.read_csv("submissions.csv")
 rounds = pd.read_csv("rounds.csv")
 competitors = pd.read_csv("competitors.csv")
 
+# --- Votes Per User Per Round (based on points their songs received) ---
+st.header("📊 Votes Per User Per Round")
+if "Start Time" in rounds.columns:
+    rounds_sorted = rounds.sort_values("Start Time")
+else:
+    rounds_sorted = rounds
+round_options = rounds_sorted[["ID", "Name"]].dropna()
+round_options_dict = dict(zip(round_options["Name"], round_options["ID"]))
+selected_round_name = st.selectbox("Select Round", round_options["Name"])
+selected_round_id = round_options_dict[selected_round_name]
+
+# Get all submissions for selected round and join votes and submitters
+sub_round = submissions[submissions["Round ID"] == selected_round_id]
+sub_round_votes = sub_round.merge(votes, on=["Spotify URI", "Round ID"], how="left")
+sub_round_votes = sub_round_votes.merge(competitors, left_on="Submitter ID", right_on="ID", suffixes=("", "_submitter"))
+
+# Group by submitter and sum votes received on their songs
+round_scores = sub_round_votes.groupby("Name")["Points Assigned"].sum().fillna(0).reset_index()
+round_scores.columns = ["Username", "Total Points Received"]
+round_scores = round_scores.sort_values(by="Total Points Received", ascending=False).reset_index(drop=True)
+
+st.dataframe(round_scores, use_container_width=True)
+
 # --- Preprocess Submissions ---
-# Use only the first artist (ignores features, splits on commas)
 submissions["Primary Artist"] = submissions["Artist(s)"].apply(lambda x: str(x).split(",")[0].strip())
 
-# Most submitted primary artists (with more than 1 submission)
+# Most submitted primary artists
 top_artists = submissions["Primary Artist"].value_counts().reset_index()
 top_artists.columns = ["Artist", "Submission Count"]
 top_artists = top_artists[top_artists["Submission Count"] > 1]
 
-# Most submitted songs with unique (Title + Primary Artist) combination (more than once)
+# Most submitted songs
 top_songs = submissions.groupby(["Title", "Primary Artist"]).size().reset_index(name="Submission Count")
-top_songs = top_songs[top_songs["Submission Count"] > 1]
-top_songs = top_songs.sort_values(by="Submission Count", ascending=False)
+top_songs = top_songs[top_songs["Submission Count"] > 1].sort_values(by="Submission Count", ascending=False)
 
 # Player leaderboard
-votes_with_submitter = votes.merge(submissions[["Spotify URI", "Submitter ID"]], on="Spotify URI")
+votes_with_submitter = votes.merge(submissions[["Spotify URI", "Submitter ID", "Round ID"]], on=["Spotify URI", "Round ID"])
 votes_with_submitter = votes_with_submitter.merge(competitors, left_on="Submitter ID", right_on="ID")
 player_leaderboard = votes_with_submitter.groupby("Name")["Points Assigned"].sum().reset_index()
 player_leaderboard.columns = ["Username", "Total Points"]
 player_leaderboard = player_leaderboard.sort_values(by="Total Points", ascending=False)
 
+# Round metrics
+submitter_map = competitors.set_index("ID")["Name"]
+rounds_participated = submissions.drop_duplicates(subset=["Round ID", "Submitter ID"]).copy()
+rounds_participated.loc[:, "Username"] = rounds_participated["Submitter ID"].map(submitter_map)
+round_counts = rounds_participated.groupby("Username").size().reset_index(name="Rounds Participated")
+
+# Merge round metrics into leaderboard
+player_leaderboard = player_leaderboard.merge(round_counts, on="Username", how="left").fillna(0)
+player_leaderboard["Rounds Participated"] = player_leaderboard["Rounds Participated"].astype(int)
+
 # --- Streamlit Layout ---
 st.title("🎵 Music League Dashboard")
 
-st.header("🏆 Unofficial Player Leaderboard")
-fig1 = px.bar(player_leaderboard.head(10), x="Total Points", y="Username", orientation="h")
+st.header("🏆 Player Leaderboard")
+fig1 = px.bar(player_leaderboard.head(10), x="Total Points", y="Username", orientation="h",
+              hover_data=["Rounds Participated"])
 st.plotly_chart(fig1)
+st.dataframe(player_leaderboard, use_container_width=True)
 
 st.header("🎤 Most Submitted Primary Artists")
 fig2 = px.bar(top_artists.head(10), x="Submission Count", y="Artist", orientation="h")
@@ -74,10 +107,8 @@ fig3 = px.bar(top_songs.head(10), x="Submission Count", y="Title", orientation="
               hover_data={"Primary Artist": True, "Title": False})
 st.plotly_chart(fig3)
 
-
-# 🎯 Snub Analysis Section
+# 🎯 Snub Analysis
 st.header("🥲 Most Snubbed Players (0-Vote Submissions)")
-
 round_map = rounds.set_index("ID")["Name"]
 submitter_map = competitors.set_index("ID")["Name"]
 
