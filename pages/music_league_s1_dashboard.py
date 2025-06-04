@@ -2,6 +2,14 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
+# Hide the GitHub icon
+hide_github_icon = """
+#GithubIcon {
+  visibility: hidden;
+}
+"""
+st.markdown(hide_github_icon, unsafe_allow_html=True)
+
 # purple header bar
 st.markdown("""
     <div style="background-color:#9e01c4;padding:1rem 1.5rem;margin-bottom:1.5rem;border-radius:8px">
