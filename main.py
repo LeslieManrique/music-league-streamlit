@@ -41,8 +41,8 @@ st.markdown("""
     }
     </style>
     <div style="text-align:center;">
-        <a href="/pages/music_league_s1_dashboard" class="season-button">❤️ Season 1: Overwatch 3 Waiting Room</a>
-        <a href="/pages/music_league_s2_dashboard" class="season-button">❤️ Season 2: Marvel Rivals Waiting Room</a>
+        <a href="/music_league_s1_dashboard" class="season-button">❤️ Season 1: Overwatch 3 Waiting Room</a>
+        <a href="/music_league_s2_dashboard" class="season-button">❤️ Season 2: Marvel Rivals Waiting Room</a>
     </div>
 """, unsafe_allow_html=True)
 
