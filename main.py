@@ -24,7 +24,7 @@ latest_season = season_numbers[-1] if season_numbers else 1
 SEASON_METADATA = {
     1: {"title": "🎶 Overwatch 3 Waiting Room 🎶"},
     2: {"title": "🎮 Marvel Rivals Waiting Room 🎮"},
-    3: {"title": "💦 Gonning Corner 💦"},
+    3: {"title": "💦 G00ning Corner 💦"},
 }
 season_number = st.sidebar.selectbox("Select a Season", season_numbers, index=len(season_numbers) - 1)
 season_path = f"exports/season_{season_number}"
