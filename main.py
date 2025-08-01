@@ -142,6 +142,41 @@ with metrics_tab:
     fig_songs = px.bar(top_songs.head(10), x="Submission Count", y="Title", orientation="h", hover_data={"Primary Artist": True, "Title": False})
     st.plotly_chart(fig_songs)
 
+    st.subheader("🔥 Voting Heatmap")
+
+    # Merge votes with voter and submitter names
+    heatmap_df = votes.merge(
+        submissions[["Spotify URI", "Round ID", "Submitter ID"]],
+        on=["Spotify URI", "Round ID"],
+        how="left"
+    )
+    heatmap_df = heatmap_df.merge(
+        competitors[["ID", "Name"]].rename(columns={"ID": "Submitter ID", "Name": "Submitter Name"}),
+        on="Submitter ID",
+        how="left"
+    )
+    heatmap_df = heatmap_df.merge(
+        competitors[["ID", "Name"]].rename(columns={"ID": "Voter ID", "Name": "Voter Name"}),
+        on="Voter ID",
+        how="left"
+    )
+
+    # Create pivot table: rows = Voters, columns = Submitters, values = total points given
+    pivot = heatmap_df.pivot_table(
+        index="Voter Name",
+        columns="Submitter Name",
+        values="Points Assigned",
+        aggfunc="sum",
+        fill_value=0
+    )
+
+    fig = px.imshow(
+        pivot,
+        labels=dict(x="Submitter", y="Voter", color="Points"),
+        color_continuous_scale="viridis"
+    )
+    fig.update_layout(height=600, xaxis_tickangle=-45)
+    st.plotly_chart(fig, use_container_width=True)
 
 with snub_tab:
     round_map = rounds.set_index("ID")["Name"]
@@ -242,6 +277,7 @@ with profile_tab:
 
     st.subheader("🙌 Top Supporters")
     st.write(supporters.rename(columns={"Name": "Voter", "Points Assigned": "Total Points Given"}).reset_index(drop=True))
+
 
     st.subheader("🎼 Submission History")
     st.dataframe(player_subs[["Round", "Title", "Primary Artist", "Total Points"]].sort_values(by="Round"), use_container_width=True)
